@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Stayside Brand Palette */
+  --color-brand-primary: #2457D6;
+  --color-brand-primary-hover: #1D47B3;
+  --color-brand-secondary: #FF7138;
+  --color-brand-accent: #FF7138;
+  --color-brand-accent-soft: #FFF0E8;
+  --color-brand-bg: #F5F7FB;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-border: #E5EAF4;
+  --color-brand-ink: #17243A;
+  --color-brand-muted: #6B778C;
+
+  /* Supporting Tints (Day vs Night) */
+  --color-day-bg: #FFF0E8;
+  --color-day-text: #C84312;
+  --color-night-bg: #EAF0FF;
+  --color-night-text: #2457D6;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-jakarta: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #17243A;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   STAYSIDE MIDNIGHT-INK DARK MODE (3-Tier Elevation System)
+   Tier 0 (Page Canvas):     #090E1A
+   Tier 1 (Elevated Cards):  #141F36  + subtle #243556 hairline border
+   Tier 2 (Soft Inset/Pill): #1B2947
+   ========================================================================== */
+html.dark {
+  --background: #090E1A;
+  --foreground: #F1F5FF;
+  color-scheme: dark;
+
+  --color-brand-primary: #5282FF;
+  --color-brand-primary-hover: #3D6DF2;
+  --color-brand-secondary: #FF7E47;
+  --color-brand-accent: #FF7E47;
+  --color-brand-accent-soft: #2D1B15;
+  --color-brand-bg: #1B2947;
+  --color-brand-surface: #141F36;
+  --color-brand-border: #253657;
+  --color-brand-ink: #F1F5FF;
+  --color-brand-muted: #9AA9C5;
+
+  --color-day-bg: #2E1C16;
+  --color-day-text: #FFA075;
+  --color-night-bg: #182A52;
+  --color-night-text: #8CB0FF;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+/* Tier 0: Deep page canvas (never same shade as elevated cards) */
+html.dark body,
+html.dark main > div.bg-white {
+  background-color: #090E1A;
+}
+
+/* Tier 1: Elevated cards, modals, panels, sidebars */
+html.dark .bg-white {
+  background-color: #141F36;
+}
+
+html.dark .bg-white\/95 {
+  background-color: rgba(14, 22, 40, 0.94);
+}
+
+html.dark .bg-white\/90 {
+  background-color: rgba(11, 17, 32, 0.9);
+}
+
+html.dark .bg-white\/85 {
+  background-color: rgba(20, 31, 54, 0.88);
+}
+
+/* Keep dark-intent surfaces (sections, map cards, modal backdrops, buttons) DARK — never inverted white */
+html.dark .bg-brand-ink {
+  background-color: #0E172B;
+}
+
+html.dark button.bg-brand-ink,
+html.dark a.bg-brand-ink {
+  background-color: #2457D6;
+  color: #FFFFFF;
+}
+
+html.dark button.bg-brand-ink:hover,
+html.dark a.bg-brand-ink:hover {
+  background-color: #3867EC;
+}
+
+html.dark .bg-brand-ink\/45,
+html.dark .bg-brand-ink\/50,
+html.dark .bg-brand-ink\/55 {
+  background-color: rgba(4, 8, 18, 0.76);
+}
+
+html.dark .bg-brand-ink\/70,
+html.dark .bg-brand-ink\/80 {
+  background-color: rgba(9, 14, 26, 0.85);
+}
+
+html.dark .border-brand-ink {
+  border-color: #2A3D63;
+}
+
+html.dark .border-\[\#ECECEC\] {
+  border-color: #253657;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-gray-50 {
+  background-color: #182540;
+}
+
+/* Crisp elevated card definition in dark mode */
+html.dark .dark-card-surface {
+  background-color: #141F36;
+  border: 1px solid #243556;
+  box-shadow: 0 10px 30px rgba(3, 7, 18, 0.45);
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+html.dark select option {
+  background-color: #141F36;
+  color: #F1F5FF;
+}
+
+/* Smooth hero rotating headline transition */
+@keyframes heroHeadlineIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-hero-headline {
+  animation: heroHeadlineIn 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Hide scrollbars cleanly on horizontal carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
