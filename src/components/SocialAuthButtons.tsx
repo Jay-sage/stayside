@@ -26,19 +26,6 @@ function GoogleLogo() {
   );
 }
 
-function AppleLogo() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="h-[18px] w-[18px]"
-      aria-hidden="true"
-    >
-      <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43Zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45Z" />
-    </svg>
-  );
-}
-
 export function SocialAuthButtons({
   mode,
   nextPath,
@@ -50,14 +37,12 @@ export function SocialAuthButtons({
   claimBookingId?: string;
   claimPhone?: string;
 }) {
-  const [busyProvider, setBusyProvider] = useState<"google" | "apple" | null>(
-    null
-  );
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleOAuth(provider: "google" | "apple") {
+  async function handleGoogleOAuth() {
     setError(null);
-    setBusyProvider(provider);
+    setBusy(true);
 
     const supabase = createClient();
     const callbackUrl = new URL("/auth/callback", window.location.origin);
@@ -70,7 +55,7 @@ export function SocialAuthButtons({
     }
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: "google",
       options: {
         redirectTo: callbackUrl.toString(),
       },
@@ -79,41 +64,25 @@ export function SocialAuthButtons({
     if (oauthError) {
       setError(
         oauthError.message ||
-          `Could not connect to ${provider === "google" ? "Google" : "Apple"}. Make sure the provider is enabled in Supabase Auth.`
+          "Could not connect to Google. Make sure Google sign-in is enabled in Supabase Auth."
       );
-      setBusyProvider(null);
+      setBusy(false);
     }
   }
 
-  const prefix = mode === "signup" ? "Sign up with" : "Continue with";
+  const label = mode === "signup" ? "Sign up with Google" : "Continue with Google";
 
   return (
     <div className="space-y-2.5">
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        <button
-          type="button"
-          disabled={busyProvider !== null}
-          onClick={() => handleOAuth("google")}
-          className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-brand-border bg-white px-4 py-2.5 text-xs font-bold text-brand-ink shadow-xs transition hover:border-brand-primary/40 hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <GoogleLogo />
-          <span>
-            {busyProvider === "google" ? "Connecting..." : `${prefix} Google`}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          disabled={busyProvider !== null}
-          onClick={() => handleOAuth("apple")}
-          className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-brand-border bg-brand-ink px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <AppleLogo />
-          <span>
-            {busyProvider === "apple" ? "Connecting..." : `${prefix} Apple`}
-          </span>
-        </button>
-      </div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={handleGoogleOAuth}
+        className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-brand-border bg-white px-4 py-3 text-xs font-bold text-brand-ink shadow-xs transition hover:border-brand-primary/40 hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <GoogleLogo />
+        <span>{busy ? "Connecting to Google..." : label}</span>
+      </button>
 
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700">
