@@ -130,6 +130,9 @@ export function BookingRequestForm({
 
       if (!res.ok) {
         setError(res.error);
+        document
+          .getElementById("booking-form")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else if (res.mode === "paystack") {
         window.location.href = res.authorizationUrl;
         return;

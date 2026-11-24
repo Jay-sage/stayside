@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BookingRequestForm } from "@/components/BookingRequestForm";
 import { getHotelDisplayRating } from "@/components/HotelCard";
@@ -84,6 +84,18 @@ export function HotelDetailClient({
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [bookingInView, setBookingInView] = useState(false);
+
+  useEffect(() => {
+    const el = document.getElementById("booking-form");
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setBookingInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const wishlist = useWishlist();
   const liked = wishlist.has(hotel.id);
@@ -399,7 +411,7 @@ export function HotelDetailClient({
            ================================================================= */}
         <div className="min-w-0 flex-1 bg-white">
           {/* Pinned In-Hotel Search Bar + Category Tabs */}
-          <div className="sticky top-[64px] z-20 border-b border-brand-border/70 bg-white/95 px-5 pt-4 backdrop-blur lg:px-10 lg:pt-6">
+          <div className="sticky top-0 z-20 border-b border-brand-border/70 bg-white/95 px-5 pt-4 backdrop-blur md:top-[64px] lg:px-10 lg:pt-6">
             {/* Search Input */}
             <div className="relative">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-brand-primary" />
@@ -700,10 +712,10 @@ export function HotelDetailClient({
       </div>
 
       {/* =================================================================
-          MOBILE STICKY BOTTOM BOOKING BAR
+          MOBILE STICKY BOTTOM BOOKING BAR (hides automatically when booking form is visible)
          ================================================================= */}
-      {selectedRoom && (
-        <div className="fixed inset-x-0 bottom-[64px] z-30 border-t border-brand-border bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(23,36,58,0.08)] backdrop-blur lg:hidden">
+      {selectedRoom && !bookingInView && (
+        <div className="fixed inset-x-0 bottom-[64px] z-30 border-t border-brand-border bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(23,36,58,0.08)] backdrop-blur md:bottom-0 lg:hidden">
           <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-brand-muted">
