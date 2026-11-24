@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   submitBookingRequest,
@@ -50,6 +50,30 @@ export function BookingRequestForm({
     () => rooms.find((r) => r.id === selectedRoomId) ?? rooms[0],
     [rooms, selectedRoomId]
   );
+
+  const [roomMenuOpen, setRoomMenuOpen] = useState(false);
+  const roomMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!roomMenuOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (
+        roomMenuRef.current &&
+        !roomMenuRef.current.contains(e.target as Node)
+      ) {
+        setRoomMenuOpen(false);
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setRoomMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [roomMenuOpen]);
 
   const canDayStay = Boolean(
     selectedRoom && selectedRoom.day_price_ngn && selectedRoom.day_rooms_per_day > 0
@@ -235,7 +259,7 @@ export function BookingRequestForm({
     <form
       id="booking-form"
       onSubmit={handleSubmit}
-      className="rounded-[16px] bg-white p-5 shadow-[0_4px_36px_rgba(19,32,48,0.08)] sm:p-6"
+      className="dark-card-surface rounded-[16px] bg-white p-5 shadow-[0_4px_36px_rgba(19,32,48,0.08)] sm:p-6"
     >
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
@@ -296,35 +320,109 @@ export function BookingRequestForm({
       )}
 
       <div className="space-y-3.5">
-        {/* Room Type */}
-        <div>
-          <label htmlFor="roomType" className="mb-1 block text-xs font-semibold text-brand-ink">
+        {/* Custom In-App Room Type Picker (replaces native browser select) */}
+        <div ref={roomMenuRef} className="relative">
+          <label className="mb-1.5 block text-xs font-semibold text-brand-ink">
             Room type
           </label>
-          <select
-            id="roomType"
-            value={selectedRoom?.id ?? ""}
-            onChange={(e) => {
-              const nextRoom = rooms.find((r) => r.id === e.target.value);
-              onSelectRoom(e.target.value);
-              if (
-                bookingType === "day" &&
-                (!nextRoom?.day_price_ngn || nextRoom.day_rooms_per_day <= 0)
-              ) {
-                setBookingType("night");
-              }
-            }}
-            className="w-full rounded-xl border border-brand-border bg-brand-bg/40 px-3 py-2.5 text-sm text-brand-ink outline-none focus:border-brand-primary focus:bg-white"
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={roomMenuOpen}
+            onClick={() => setRoomMenuOpen((v) => !v)}
+            className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition ${
+              roomMenuOpen
+                ? "border-brand-primary bg-white ring-2 ring-brand-primary/15"
+                : "border-brand-border bg-brand-bg/50 hover:border-brand-primary/40"
+            }`}
           >
-            {rooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name} —{" "}
-                {bookingType === "day" && room.day_price_ngn
-                  ? `${formatNaira(room.day_price_ngn)}/day`
-                  : `${formatNaira(room.night_price_ngn)}/night`}
-              </option>
-            ))}
-          </select>
+            <div className="min-w-0">
+              <p className="truncate font-jakarta text-sm font-bold text-brand-ink">
+                {selectedRoom?.name ?? "Select a room"}
+              </p>
+              {selectedRoom && (
+                <p className="mt-0.5 text-[11px] text-brand-muted">
+                  Up to {selectedRoom.capacity} guests ·{" "}
+                  <span className="font-bold text-brand-primary">
+                    {bookingType === "day" && selectedRoom.day_price_ngn
+                      ? `${formatNaira(selectedRoom.day_price_ngn)}/day`
+                      : `${formatNaira(selectedRoom.night_price_ngn)}/night`}
+                  </span>
+                </p>
+              )}
+            </div>
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-4 w-4 shrink-0 text-brand-muted transition-transform duration-200 ${
+                roomMenuOpen ? "rotate-180 text-brand-primary" : ""
+              }`}
+              aria-hidden="true"
+            >
+              <path d="m5 7.5 5 5 5-5" />
+            </svg>
+          </button>
+
+          {roomMenuOpen && (
+            <div
+              role="listbox"
+              aria-label="Choose a room type"
+              className="dark-card-surface absolute right-0 left-0 z-30 mt-2 overflow-hidden rounded-2xl border border-brand-border bg-white p-1.5 shadow-[0_14px_40px_rgba(19,32,48,0.16)]"
+            >
+              {rooms.map((room) => {
+                const isActive = room.id === selectedRoom?.id;
+                const priceLabel =
+                  bookingType === "day" && room.day_price_ngn
+                    ? `${formatNaira(room.day_price_ngn)}/day`
+                    : `${formatNaira(room.night_price_ngn)}/night`;
+
+                return (
+                  <button
+                    key={room.id}
+                    type="button"
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      onSelectRoom(room.id);
+                      if (
+                        bookingType === "day" &&
+                        (!room.day_price_ngn || room.day_rooms_per_day <= 0)
+                      ) {
+                        setBookingType("night");
+                      }
+                      setRoomMenuOpen(false);
+                    }}
+                    className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                      isActive
+                        ? "bg-night-bg text-brand-primary"
+                        : "text-brand-ink hover:bg-brand-bg/70"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-jakarta text-xs font-bold">
+                        {room.name}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-brand-muted">
+                        Up to {room.capacity} guests
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="font-jakarta text-xs font-extrabold text-brand-primary">
+                        {priceLabel}
+                      </span>
+                      {isActive && (
+                        <CheckCircleIcon className="h-4 w-4 text-brand-primary" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Custom HotelIQ-style Calendar */}
